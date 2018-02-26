@@ -20,6 +20,19 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name=".firebase.SquawkFirebaseInstanceIdService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service android:name=".firebase.SquawkFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <provider
             android:name=".provider.generated.SquawkProvider"
             android:authorities="android.example.com.squawker.provider.provider"
