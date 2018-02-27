@@ -1,9 +1,18 @@
 package android.example.com.squawker.firebase;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
+import android.example.com.squawker.MainActivity;
+import android.example.com.squawker.R;
 import android.example.com.squawker.provider.SquawkContract;
 import android.example.com.squawker.provider.SquawkProvider;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.v4.app.NotificationCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -24,9 +33,15 @@ public class SquawkFirebaseMessagingService extends FirebaseMessagingService {
 
         if(data.size() > 0) {
             insertSquawk(data);
+            sendNotification(data);
         }
     }
 
+    /**
+     * Insert squawk into database
+     *
+     * @param data
+     */
     private void insertSquawk(final Map<String, String> data) {
         AsyncTask<Void, Void, Void> insertSquawkTask = new AsyncTask<Void, Void, Void>() {
 
@@ -43,5 +58,38 @@ public class SquawkFirebaseMessagingService extends FirebaseMessagingService {
         };
 
         insertSquawkTask.execute();
+    }
+
+    /**
+     * Send notification
+     * @param data
+     */
+    private void sendNotification(Map<String, String> data) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        // Create the pending intent to launch the activity
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        String author = data.get(SquawkContract.COLUMN_AUTHOR);
+        String message = data.get(SquawkContract.COLUMN_MESSAGE);
+
+        if (message.length() > 20) {
+            message = message.substring(0, 20) + "\u2026";
+        }
+
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_duck)
+                .setContentTitle(String.format(getString(R.string.notification_message), author))
+                .setContentText(message)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0 , notificationBuilder.build());
     }
 }
